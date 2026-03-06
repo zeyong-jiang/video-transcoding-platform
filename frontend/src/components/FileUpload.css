@@ -1,0 +1,237 @@
+/* Existing Card Styles */
+.preview-container {
+    position: relative;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+}
+
+/* 5-Slice Animation */
+.slicing-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    /* Center the icon */
+    align-items: center;
+    z-index: 10;
+}
+
+/* Container for slices */
+.slice-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    gap: 4px;
+    /* Distinct gap between slices */
+    padding: 0 4px;
+    /* Padding for outer edges */
+    pointer-events: none;
+    align-items: flex-end;
+    /* Align to bottom for rising effect */
+}
+
+.slice {
+    flex: 1;
+    /* Height will be animated */
+    height: 0%;
+    background: linear-gradient(to top,
+            rgba(102, 126, 234, 0.4) 0%,
+            rgba(102, 126, 234, 0.9) 100%);
+    border-radius: 4px;
+    /* Rounded tops */
+    position: relative;
+    /* Simultaneous animation */
+    animation: uploadRise 2s infinite ease-in-out;
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+}
+
+.slice:last-child {
+    border-right: none;
+}
+
+@keyframes uploadRise {
+    0% {
+        height: 0%;
+        opacity: 0.5;
+    }
+
+    50% {
+        height: 100%;
+        opacity: 1;
+    }
+
+    55% {
+        height: 100%;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        height: 100%;
+        opacity: 0;
+        transform: translateY(-20px);
+        /* Fly off top slightly */
+    }
+}
+
+/* Removed old uploadFlow and replaced with uploadRise */
+
+/* Floating bits inside slices to simulate data */
+.slice::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20%;
+    background: rgba(255, 255, 255, 0.4);
+    animation: dataStream 2s infinite linear;
+}
+
+@keyframes dataStream {
+    0% {
+        transform: translateY(500%);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+}
+
+.uploading-icon {
+    z-index: 20;
+    font-size: 3rem;
+    color: white;
+    filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.8));
+    animation: cloudPulse 2s infinite ease-in-out;
+}
+
+@keyframes cloudPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Success Overlay */
+.success-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 184, 148, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+}
+
+.success-icon {
+    font-size: 4rem;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Actions */
+.completion-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.download-btn {
+    background: #00b894;
+    flex: 1;
+}
+
+.reset-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    flex: 1;
+}
+
+.progress-section {
+    width: 100%;
+    text-align: left;
+    margin-top: 1rem;
+}
+
+/* Slider Controls */
+.upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Slider Controls */
+.slice-overlay-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+    z-index: 15;
+    display: flex;
+    justify-content: center;
+}
+
+.slice-control {
+    width: 80%;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+}
+
+.slice-control input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+    accent-color: #667eea;
+}
+
+.est-time {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
