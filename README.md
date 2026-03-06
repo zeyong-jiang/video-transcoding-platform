@@ -37,8 +37,8 @@ graph TD
     MultiWorker -- 9. Merge Final Output --> FFmpegMerged{{FFmpeg Merge}}
     MultiWorker -- 10. Finalize Status --> Redis
     
-    Client <-. 11. WS Progress Feed .-> Gateway
-    Gateway <-. 12. Poll State .-> Redis
+    Client -. "11. WS Progress Feed" .-> Gateway
+    Gateway -. "12. Poll State" .-> Redis
 ```
 
 ### Design Rationale for Interviewers:
