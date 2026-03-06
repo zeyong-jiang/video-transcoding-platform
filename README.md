@@ -1,98 +1,101 @@
-# 高效率影片轉檔平台 (Scalable Video Transcoding Platform)
+# Scalable Video Transcoding Platform
 
-歡迎來到高效率影片轉檔平台！👋
+[![Status](https://img.shields.io/badge/Status-Beta-blue.svg)]()
+[![Tech Stack](https://img.shields.io/badge/Stack-FastAPI%20|%20RabbitMQ%20|%20FFmpeg-green.svg)]()
 
-這是一個專為「大量」且「快速」處理影片轉檔需求而設計的系統。無論您上傳的是電影、教學影片或生活紀錄，我們的系統都能運用最新的「平行運算」技術，以極快的速度將影片轉換為相容性最高的 MP4 格式。
+A high-performance, distributed video transcoding system designed to handle large-scale processing workloads via microservices architecture and parallel execution pipelines.
 
-## 🌟 這是在做什麼的？ (白話文介紹)
+## 🚀 Overview
 
-想像您經營一家非常受歡迎的餐廳（**影片轉檔服務**），每天都有無數的顧客（**使用者**）拿著各種不同食材（**原始影片**）來，要求您幫忙料理成統一的套餐（**MP4 影片**）。
+Processing high-resolution video is computationally expensive and time-consuming. This project addresses latency challenges by implementing a **Distributed Parallel Transcoding** strategy. By segmenting videos into concurrent chunks, the system significantly reduces end-to-end processing time and maximizes hardware utilization across a cluster of worker nodes.
 
-如果只有一位廚師，一次只能處理一道菜，那顧客肯定會等到天荒地老。
-
-**這就是我們要解決的問題！**
-
-我們的系統就像是一個擁有**超級中央廚房**的現代化餐廳：
-
-1.  **櫃台點餐 (API Gateway)**：負責接待顧客，確認食材沒問題後，給顧客一張號碼牌（**Task ID**）。
-2.  **切菜助手 (Chunking)**：廚房裡有專門的助手，負責將一大塊肉（**完整影片**）快速切成好幾小塊（**切片/Chunks**）。
-3.  **多位大廚 (Parallel Workers)**：有好幾位大廚同時開火！每位大廚領一小塊肉回去料理（**轉檔**）。因為是同時進行，原本要煮 1 小時的大肉塊，現在可能只要 10 分鐘就全部熟了！
-4.  **擺盤出餐 (Merging)**：最後將所有料理好的小塊肉重新組合，變成一份完美的餐點交給顧客。
+### Key Features
+*   **Parallel Processing Pipeline**: Automatic video segmentation (slicing) using FFmpeg to enable concurrent transcoding of a single file.
+*   **Decoupled Architecture**: Utilizes RabbitMQ as a reliable message broker to isolate the API Gateway from compute-intensive worker tasks.
+*   **Real-time Visibility**: Low-latency status updates and progress tracking powered by Redis and WebSockets.
+*   **Fault Tolerance**: Transactional task management ensuring that failed slices are retried or reported without compromising the entire job.
 
 ---
 
-## 🚀 運作原理 (給稍微懂一點電腦的人)
+## 🏗️ Architecture & System Design
 
-這套系統的核心概念叫做 **「分散式架構 (Distributed Architecture)」** 與 **「並行處理 (Parallel Processing)」**。
+The system follows a **Producer-Consumer** pattern across isolated containers:
 
-### 步驟流程：
-
-1.  **上傳 (Upload)**：使用者透過網頁上傳影片。
-2.  **派發任務 (Task Queue)**：系統將「轉檔」這件事變成一個任務，投遞到一個即時的任務清單中（我們使用 **RabbitMQ**）。
-3.  **切片 (Slicing)**：背景程式接收到任務，先將影片「切」成每 10 秒一段的小片段。
-    *   *為什麼要切？* 因為處理 10 個 1 分鐘的片段，比處理一個 10 分鐘的影片更有彈性，且可以同時做！
-4.  **並行轉檔 (Transcoding)**：多個轉檔程式（Worker）同時從清單中領取這些小片段，各自進行格式轉換。
-5.  **合併 (Merging)**：當所有小片段都轉好後，系統會自動將它們「接」回去，變成完整的 MP4 影片。
-6.  **通知 (Notification)**：透過即時連線（WebSocket），網頁上的進度條會即時更新（例如：50% -> 80% -> 完成）。
-
----
-
-## 🛠️ 我們是如何實現的？ (技術細節)
-
-對於想了解程式碼運作的朋友，我們使用了以下技術：
-
-### 1. 前端介面 (Frontend) - **React + Vite**
-*   **介面設計**：使用精美的 Glassmorphism (玻璃擬態) 風格，深色主題讓質感大增。
-*   **動畫效果**：使用 CSS3 Animation 製作了「5切片上傳」的動畫，生動呈現資料被切割並上傳至雲端的意象。
-*   **即時通訊**：使用 **WebSocket** 技術，讓伺服器可以主動告訴網頁「目前進度到哪了」，而不需要網頁一直重新整理。
-
-### 2. 後端核心 (Backend) - **Python + FastAPI**
-*   **API Gateway**：這是系統的大門，負責驗證請求並將檔案暫存。
-*   **Worker Service**：這是苦力，負責實際執行 `ffmpeg` 指令來處理影片。
-
-### 3. 中間件 (Middleware) - **RabbitMQ + Redis**
-*   **RabbitMQ (訊息隊列)**：它是傳令兵。前端把任務丟給它，Worker 再從它那裡領任務。它確保了即使 Worker 忙不過來，任務也不會不見，會乖乖排隊。
-*   **Redis (快取資料庫)**：它是記分板。用來記錄每個影片目前的狀態（是正在切片？還是轉檔中？）以及進度百分比。
-
-### 4. 基礎設施 (Infrastructure) - **Docker**
-*   我們將上述所有軟體都打包在 **Docker 容器** 中。這意味著無論您使用哪種電腦，只要安裝了 Docker，輸入一行指令，整個系統就能在幾分鐘內架設完成！
-
----
-
-## 💻 快速開始 (Quick Start)
-
-想要親自體驗這個平台嗎？請跟著以下步驟：
-
-### 準備工作
-請確保您的電腦已安裝 **Docker Desktop**。
-
-### 啟動服務
-打開終端機 (Terminal)，在專案資料夾中執行：
-
-```bash
-docker-compose up -d --build
+```mermaid
+graph TD
+    Client[React Frontend] -- 1. Upload & Request --> Gateway[API Gateway - FastAPI]
+    Gateway -- 2. Persist File --> Storage[(Shared Volume / S3)]
+    Gateway -- 3. Dispatch Task --> RabbitMQ{RabbitMQ Broker}
+    
+    RabbitMQ -- 4. Pulse Message --> Worker[Worker Node]
+    Worker -- 5. Slicing Flow --> FFmpeg{{FFmpeg Slicing}}
+    Worker -- 6. Update Status --> Redis[(Redis State Store)]
+    
+    Worker -- 7. Emit Slice Tasks --> RabbitMQ
+    RabbitMQ -- 8. Concurrent Jobs --> MultiWorker[Parallel Trancoder Threads]
+    
+    MultiWorker -- 9. Merge Final Output --> FFmpegMerged{{FFmpeg Merge}}
+    MultiWorker -- 10. Finalize Status --> Redis
+    
+    Client <-. 11. WS Progress Feed .-> Gateway
+    Gateway <-. 12. Poll State .-> Redis
 ```
 
-這行指令會自動下載所有需要的程式、建立資料庫、架設網站，並將它們全部串連起來。
-
-### 使用平台
-1.  打開瀏覽器，網址輸入：**http://localhost:80**
-2.  您會看到一個帥氣的 **Transcode Pro** 介面。
-3.  點擊中間的資料夾圖示，選擇一個影片檔（建議 MP4, MOV, AVI 等）。
-4.  看著預覽畫面出現，然後點擊 **"🚀 Upload & Transcode"**。
-5.  ✨ 享受那個由 5 個切片組成的上傳動畫，以及飛快跑動的進度條吧！
+### Design Rationale for Interviewers:
+*   **Scalability**: Worker nodes can be horizontally scaled using `docker-compose --scale worker=N` to handle increased request volume.
+*   **Availability**: By separating "Slicing" from "Transcoding" tasks, the system avoids head-of-line blocking and ensures high availability of the API interface.
+*   **Resource Efficiency**: Threads are dynamically allocated per chunk based on available cores and user-defined slice counts.
 
 ---
 
-## ⚠️ 常見問題
+## 🛠️ Tech Stack
 
-*   **Q: 轉檔完的影片在哪裡？**
-    *   A: 雖然這是個演示系統，但轉檔完成的檔案實際存放在 Worker 容器內。在真實的雲端架構中，我們會將它上傳到 AWS S3 或 Google Cloud Storage。
+*   **Backend**: Python (FastAPI, Pika, Redis-py)
+*   **Processing**: FFmpeg (via `ffmpeg-python`)
+*   **Middleware**: RabbitMQ (Messaging), Redis (State & Progress)
+*   **Frontend**: React 19 (Vite, WebSockets, Tailwind/Glassmorphism)
+*   **Infrastructure**: Docker & Docker Compose
 
-*   **Q: 為什麼進度條有時候會停住？**
-    *   A: 這可能是因為正在處理一個比較複雜的影片片段。別擔心，我們的系統有「容錯機制」，如果某個片段失敗了，它會自動重試！
+---
+
+## 💻 Quick Start
+
+### Prerequisites
+*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
+
+### Installation & Execution
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/zeyong-jiang/video-transcoding-platform.git
+    cd video-transcoding-platform
+    ```
+2.  Launch the services:
+    ```bash
+    docker-compose up -d --build
+    ```
+3.  Access the platform:
+    *   **Frontend**: [http://localhost:80](http://localhost:80)
+    *   **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+    *   **RabbitMQ Management**: [http://localhost:15672](http://localhost:15672) (guest/guest)
+
+---
+
+## 🔍 System Walkthrough
+
+1.  **Ingestion**: The client uploads a video. The **API Gateway** stores the raw file in a shared volume (simulating S3) and publishes a `new_video` task.
+2.  **Slicing**: A **Worker** receives the task and segment the video into $N$ fragments (default: 5). It then publishes $N$ individual `chunk_task` messages back to RabbitMQ.
+3.  **Parallel Transcoding**: Multiple worker threads/processes pick up individual chunks simultaneously. Each chunk is transcoded to the target format (e.g., MP4/H.264) using hardware-optimized FFmpeg commands.
+4.  **Merging**: Once Redis confirms all $N$ chunks are processed, the system triggers a `merge_task`. FFmpeg concatenates the fragments into the final output file.
+5.  **Feedback Loop**: Throughout the process, the **WebSocket** server polls Redis every second to provide the user with a fluid, real-time progress bar.
+
+---
+
+## 📈 Future Enhancements
+*   [ ] **Cloud Integration**: Replace Docker Volumes with actual AWS S3 buckets for global scalability.
+*   [ ] **GPU Acceleration**: Implement NVIDIA NVENC support within Docker for faster hardware-accelerated transcoding.
+*   [ ] **Observability**: Integrate Prometheus and Grafana for monitoring worker throughput and queue latency.
 
 ---
 
 ### License
-MIT License - 歡迎隨意修改與學習！
+MIT License. Created by [Zeyong Jiang](https://github.com/zeyong-jiang).
